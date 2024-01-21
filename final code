@@ -1,0 +1,576 @@
+package rp;
+import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+class Ingredient {
+    private int ingredientId;
+    private String name;
+    private double quantity;
+    private String unit;
+
+    public Ingredient(int ingredientId, String name, double quantity, String unit) {
+        this.ingredientId = ingredientId;
+        this.name = name;
+        this.quantity = quantity;
+        this.unit = unit;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s %.2f %s", name, quantity, unit);
+    }
+}
+
+class Category {
+    private int categoryId;
+    private String name;
+
+    public Category(int categoryId, String name) {
+        this.categoryId = categoryId;
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+}
+
+class User {
+    private int userId;
+    private String username;
+    private String password;
+    private String email;
+
+    public User(String username, String password, String email) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+
+        if (username == null || username.isEmpty() || password == null || password.isEmpty() || email == null || email.isEmpty()) {
+            throw new IllegalArgumentException("Username, password, and email cannot be empty or null");
+        }
+    }
+
+    @Override
+    public String toString() {
+        return username;
+    }
+}
+
+class Recipe {
+    private int recipeId;
+    private String title;
+    private String description;
+    private List<Ingredient> ingredients;
+    private Category category;
+    private User author;
+    private String difficulty;
+    private int duration;
+
+    public Recipe(int recipeId, String title, String description, List<Ingredient> ingredients,
+                  Category category, User author, String difficulty, int duration) {
+        this.recipeId = recipeId;
+        this.title = title;
+        this.description = description;
+        this.ingredients = ingredients;
+        this.category = category;
+        this.author = author;
+        this.difficulty = difficulty;
+        this.duration = duration;
+    }
+
+    public void displayRecipe() {
+        System.out.println("Recipe: " + title);
+        System.out.println("Author: " + author);
+        System.out.println("Category: " + category);
+        System.out.println("Difficulty: " + difficulty);
+        System.out.println("Duration: " + duration + " minutes");
+        System.out.println("Ingredients:");
+        for (Ingredient ingredient : ingredients) {
+            System.out.println("- " + ingredient);
+        }
+        System.out.println("Instructions: " + description);
+        System.out.println();
+    }
+    public int getRecipeId() {
+        return recipeId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public List<Ingredient> getIngredients() {
+        return ingredients;
+    }
+     public String getAuthor() {
+        return author.toString();
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public String getDifficulty() {
+        return difficulty;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+    public String generateRecipeInstructions() {
+        StringBuilder instructions = new StringBuilder();
+        instructions.append("Recipe for ").append(title).append(":\n");
+        instructions.append("Ingredients:\n");
+        for (Ingredient ingredient : ingredients) {
+            instructions.append("- ").append(ingredient).append("\n");
+        }
+        instructions.append("\nInstructions:\n").append(description);
+        return instructions.toString();
+    }
+}
+class RecipeDatabase {
+    private static List<Recipe> recipeDatabase;
+
+    static {
+        recipeDatabase = new ArrayList<>();
+        
+recipeDatabase.add(new Recipe(
+        1,
+        "Chocolate Cake",
+        "Delicious chocolate cake recipe.",
+        Arrays.asList(
+                new Ingredient(1, "Flour", 2.0, "cups"),
+                new Ingredient(2, "Sugar", 1.0, "cup")
+        ),
+        new Category(1, "Dessert"),
+        new User("user1", "pass1", "user1@example.com"),
+        "Intermediate",
+        60
+));
+
+recipeDatabase.add(new Recipe(
+        2,
+        "Spaghetti Bolognese",
+        "Classic spaghetti bolognese with ground beef.",
+        Arrays.asList(
+                new Ingredient(3, "Ground Beef", 500.0, "g"),
+                new Ingredient(4, "Onion", 1.0, "medium"),
+                new Ingredient(5, "Garlic", 2.0, "cloves"),
+                new Ingredient(6, "Crushed Tomatoes", 1.0, "can"),
+                new Ingredient(7, "Tomato Paste", 2.0, "tbsp"),
+                new Ingredient(8, "Dried Oregano", 1.0, "tsp"),
+                new Ingredient(9, "Dried Basil", 1.0, "tsp"),
+                new Ingredient(10, "Salt", 1.0, "tsp"),
+                new Ingredient(11, "Pepper", 0.5, "tsp"),
+                new Ingredient(12, "Spaghetti", 400.0, "g")
+        ),
+        new Category(2, "Pasta"),
+        new User("user2", "pass2", "user2@example.com"),
+        "Easy",
+        30
+));
+
+recipeDatabase.add(new Recipe(
+        3,
+        "Margherita Pizza",
+        "Classic Margherita pizza with fresh mozzarella and basil.",
+        Arrays.asList(
+                new Ingredient(13, "Pizza Dough", 1.0, "portion"),
+                new Ingredient(14, "Tomato Sauce", 1.0, "cup"),
+                new Ingredient(15, "Fresh Mozzarella", 1.5, "cups"),
+                new Ingredient(16, "Fresh Basil Leaves", 0.5, "cup"),
+                new Ingredient(17, "Olive Oil", 2.0, "tbsp"),
+                new Ingredient(18, "Salt", 1.0, "tsp"),
+                new Ingredient(19, "Pepper", 0.5, "tsp")
+        ),
+        new Category(3, "Pizza"),
+        new User("user3", "pass3", "user3@example.com"),
+        "Easy",
+        25
+));
+
+recipeDatabase.add(new Recipe(
+        4,
+        "Caesar Salad",
+        "Classic Caesar salad with croutons and Parmesan.",
+        Arrays.asList(
+                new Ingredient(20, "Romaine Lettuce", 1.0, "head"),
+                new Ingredient(21, "Croutons", 1.0, "cup"),
+                new Ingredient(22, "Parmesan Cheese", 0.5, "cup"),
+                new Ingredient(23, "Caesar Dressing", 0.5, "cup")
+        ),
+        new Category(4, "Salad"),
+        new User("user4", "pass4", "user4@example.com"),
+        "Easy",
+        15
+));
+
+recipeDatabase.add(new Recipe(
+        5,
+        "Vegetable Curry",
+        "Hearty vegetable curry with coconut milk.",
+        Arrays.asList(
+                new Ingredient(24, "Cauliflower Florets", 1.0, "cup"),
+                new Ingredient(25, "Carrots", 1.0, "cup, sliced"),
+                new Ingredient(26, "Potatoes", 1.0, "cup, diced"),
+                new Ingredient(27, "Peas", 1.0, "cup"),
+                new Ingredient(28, "Onion", 1.0, "medium, finely chopped"),
+                new Ingredient(29, "Garlic", 2.0, "cloves, minced"),
+                new Ingredient(30, "Coconut Milk", 1.0, "can"),
+                new Ingredient(31, "Curry Powder", 2.0, "tbsp"),
+                new Ingredient(32, "Salt", 1.0, "tsp"),
+                new Ingredient(33, "Pepper", 0.5, "tsp"),
+                new Ingredient(34, "Cooked Rice", 2.0, "cups")
+        ),
+        new Category(5, "Curry"),
+        new User("user5", "pass5", "user5@example.com"),
+        "Intermediate",
+        40
+));
+
+recipeDatabase.add(new Recipe(
+        6,
+        "Grilled Salmon",
+        "Delicious grilled salmon fillets.",
+        Arrays.asList(
+                new Ingredient(35, "Salmon Fillets", 4.0, "pieces"),
+                new Ingredient(36, "Olive Oil", 2.0, "tbsp"),
+                new Ingredient(37, "Lemon Juice", 2.0, "tsp"),
+                new Ingredient(38, "Dried Dill", 1.0, "tsp"),
+                new Ingredient(39, "Salt", 1.0, "tsp"),
+                new Ingredient(40, "Pepper", 0.5, "tsp")
+        ),
+        new Category(6, "Seafood"),
+        new User("user6", "pass6", "user6@example.com"),
+        "Easy",
+        15
+));
+
+recipeDatabase.add(new Recipe(
+        7,
+        "Caprese Salad",
+        "Classic Caprese salad with tomatoes, mozzarella, and basil.",
+        Arrays.asList(
+                new Ingredient(41, "Large Tomatoes", 4.0, "sliced"),
+                new Ingredient(42, "Fresh Mozzarella", 200.0, "g, sliced"),
+                new Ingredient(43, "Fresh Basil Leaves", 0.5, "cup"),
+                new Ingredient(44, "Balsamic Glaze", 2.0, "tbsp"),
+                new Ingredient(45, "Olive Oil", 2.0, "tbsp"),
+                new Ingredient(46, "Salt", 1.0, "tsp"),
+                new Ingredient(47, "Pepper", 0.5, "tsp")
+        ),
+        new Category(7, "Salad"),
+        new User("user7", "pass7", "user7@example.com"),
+        "Easy",
+        10
+));
+
+recipeDatabase.add(new Recipe(
+        8,
+        "Chicken Quesadillas",
+        "Delicious chicken quesadillas with cheese and veggies.",
+        Arrays.asList(
+                new Ingredient(48, "Cooked Chicken", 2.0, "cups, shredded"),
+                new Ingredient(49, "Cheddar Cheese", 1.0, "cup, shredded"),
+                new Ingredient(50, "Bell Peppers", 1.0, "cup, diced"),
+                new Ingredient(51, "Onions", 0.5, "cup, diced"),
+                new Ingredient(52, "Flour Tortillas", 4.0, "large"),
+                new Ingredient(53, "Sour Cream", 0.5, "cup"),
+                new Ingredient(54, "Salsa", 0.5, "cup")
+        ),
+        new Category(8, "Mexican"),
+        new User("user8", "pass8", "user8@example.com"),
+        "Easy",
+        20
+));
+
+recipeDatabase.add(new Recipe(
+        9,
+        "Greek Salad",
+        "Fresh Greek salad with cucumber, tomatoes, olives, and feta.",
+        Arrays.asList(
+                new Ingredient(55, "Cucumber", 1.0, "diced"),
+                new Ingredient(56, "Cherry Tomatoes", 1.0, "cup, halved"),
+                new Ingredient(57, "Red Onion", 0.5, "cup, thinly sliced"),
+                new Ingredient(58, "Kalamata Olives", 1.0, "cup"),
+                new Ingredient(59, "Feta Cheese", 200.0, "g, crumbled"),
+                new Ingredient(60, "Fresh Oregano Leaves", 0.5, "cup"),
+                new Ingredient(61, "Olive Oil", 2.0, "tbsp"),
+                new Ingredient(62, "Red Wine Vinegar", 2.0, "tbsp"),
+                new Ingredient(63, "Salt", 1.0, "tsp"),
+                new Ingredient(64, "Pepper", 0.5, "tsp")
+        ),
+        new Category(9, "Salad"),
+        new User("user9", "pass9", "user9@example.com"),
+        "Easy",
+        15
+));
+
+recipeDatabase.add(new Recipe(
+        10,
+        "Chicken Alfredo Pasta",
+        "Creamy Alfredo pasta with shredded chicken.",
+        Arrays.asList(
+                new Ingredient(65, "Fettuccine Pasta", 500.0, "g"),
+                new Ingredient(66, "Butter", 2.0, "tbsp"),
+                new Ingredient(67, "Garlic", 2.0, "cloves, minced"),
+                new Ingredient(68, "Heavy Cream", 1.0, "cup"),
+                new Ingredient(69, "Parmesan Cheese", 1.0, "cup, grated"),
+                new Ingredient(70, "Cooked Chicken", 2.0, "cups, shredded"),
+                new Ingredient(71, "Salt", 1.0, "tsp"),
+                new Ingredient(72, "Pepper", 0.5, "tsp"),
+                new Ingredient(73, "Fresh Parsley", 0.5, "cup, for garnish")
+        ),
+        new Category(10, "Pasta"),
+        new User("user10", "pass10", "user10@example.com"),
+        "Easy",
+        15
+));
+    }
+
+    public static List<Recipe> getRecipeDatabase() {
+        return recipeDatabase;
+    }
+    public static void populateRecipeDatabase(RecipeOrganizer organizer) {
+        for (Recipe recipe : recipeDatabase) {
+            organizer.addRecipe(recipe);
+        }
+    }
+}
+
+class RecipeOrganizer {
+    private List<Recipe> recipes;
+    private List<Ingredient> ingredients;
+    private List<Category> categories;
+    private List<User> users;
+
+    public RecipeOrganizer() {
+        this.recipes = new ArrayList<>();
+        this.ingredients = new ArrayList<>();
+        this.categories = new ArrayList<>();
+        this.users = new ArrayList<>();
+    }
+
+    public void addRecipe(Recipe recipe) {
+        recipes.add(recipe);
+    }
+
+    public void displayRecipes() {
+        for (Recipe recipe : recipes) {
+            recipe.displayRecipe();
+        }
+    }
+       public Recipe getRecipeByTitle(String title) {
+        for (Recipe recipe : recipes) {
+            if (recipe.getTitle().equals(title)) {
+                return recipe;
+            }
+      }
+        return null;
+}
+}
+ 
+
+
+class rp{
+       private static RecipeOrganizer organizer;
+    private static JComboBox<String> recipeComboBox;
+    private static JTextArea recipeDetailsArea;
+    private static User loggedInUser;
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+    
+                
+                
+                
+                
+                Connection connection = null;
+    try {
+        connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydatabase?zeroDateTimeBehavior=convertToNull","root","");
+
+        if (connection != null) {
+            System.out.println("Connected to the database!");
+String createInfoTableQuery = "CREATE TABLE IF NOT EXISTS info (" +
+                            "user_id INT AUTO_INCREMENT PRIMARY KEY," +
+                            "username VARCHAR(255) NOT NULL," +
+                            "password VARCHAR(255) NOT NULL," +
+                            "email VARCHAR(255) NOT NULL UNIQUE" +
+                            ")";
+                    PreparedStatement createTableStatement = connection.prepareStatement(createInfoTableQuery);
+                    createTableStatement.executeUpdate();
+
+                    String insertUserDataQuery = "INSERT INTO info (username, password, email) VALUES (?, ?, ?)";
+                    PreparedStatement insertUserDataStatement = connection.prepareStatement(insertUserDataQuery);
+
+                    insertUserDataStatement.setString(1, "user1");
+                    insertUserDataStatement.setString(2, "pass1");
+                    insertUserDataStatement.setString(3, "user1@example.com");
+                    insertUserDataStatement.executeUpdate();
+
+                    insertUserDataStatement.setString(1, "user2");
+                    insertUserDataStatement.setString(2, "pass2");
+                    insertUserDataStatement.setString(3, "user2@example.com");
+                    insertUserDataStatement.executeUpdate();
+                    
+                    System.out.println("Info table created and data inserted successfully!");
+                    connection.close();
+            System.out.println("Connection closed.");
+        }
+                
+           
+     
+    } catch (SQLException e) {
+        e.printStackTrace();
+    } finally {
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+                
+                
+                
+                
+                
+                showLoginForm();
+            }
+        });
+}
+
+    private static void showLoginForm() {
+        JFrame loginFrame = new JFrame("Login");
+        loginFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        loginFrame.setSize(300, 150);
+        createLoginComponents(loginFrame.getContentPane());
+        loginFrame.setVisible(true);
+    }
+
+    private static void createLoginComponents(Container container) {
+        container.setLayout(new GridLayout(4, 2));
+
+        JLabel nameLabel = new JLabel("Username:");
+        final JTextField nameField = new JTextField();
+
+        JLabel passwordLabel = new JLabel("Password:");
+        final JPasswordField passwordField = new JPasswordField();
+
+        JLabel emailLabel = new JLabel("Email:");
+        final JTextField emailField = new JTextField();
+
+        JButton loginButton = new JButton("Login");
+
+        container.add(nameLabel);
+        container.add(nameField);
+        container.add(passwordLabel);
+        container.add(passwordField);
+        container.add(emailLabel);
+        container.add(emailField);
+        container.add(new JLabel());
+        container.add(loginButton);
+
+        loginButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String username = nameField.getText();
+                String password = new String(passwordField.getPassword());
+                String email = emailField.getText();
+
+                try {
+                    loggedInUser = new User(username, password, email);
+                    showRecipeOrganizer();
+                } catch (IllegalArgumentException ex) {
+                    JOptionPane.showMessageDialog(null, ex.getMessage(), "Login Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+    }
+
+    private static void showRecipeOrganizer() {
+        
+        organizer = new RecipeOrganizer();
+        RecipeDatabase.populateRecipeDatabase(organizer);
+
+        JFrame frame = new JFrame("Recipe App");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 400);
+
+        createComponents(frame.getContentPane());
+
+        frame.setVisible(true);
+    }
+
+    private static void createComponents(Container container) {
+        container.setLayout(new BorderLayout());
+
+        JPanel selectionPanel = new JPanel();
+        recipeComboBox = new JComboBox<>();
+        JButton viewButton = new JButton("View Recipe");
+        selectionPanel.add(new JLabel("Select Recipe: "));
+        selectionPanel.add(recipeComboBox);
+        selectionPanel.add(viewButton);
+
+        recipeDetailsArea = new JTextArea();
+        recipeDetailsArea.setEditable(false);
+
+        viewButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                displaySelectedRecipe();
+            }
+        });
+
+        container.add(selectionPanel, BorderLayout.NORTH);
+        container.add(new JScrollPane(recipeDetailsArea), BorderLayout.CENTER);
+
+        java.util.List<Recipe> recipes = RecipeDatabase.getRecipeDatabase();
+        for (Recipe recipe : recipes) {
+            recipeComboBox.addItem(recipe.getTitle());
+        }
+    }
+
+  private static void displaySelectedRecipe() {
+    String selectedRecipeTitle = (String) recipeComboBox.getSelectedItem();
+    Recipe selectedRecipe = organizer.getRecipeByTitle(selectedRecipeTitle);
+
+    if (selectedRecipe != null) {
+        StringBuilder recipeDetailsText = new StringBuilder("Details for " + selectedRecipe.getTitle() + ":\n");
+        recipeDetailsText.append("Author: ").append(selectedRecipe.getAuthor()).append("\n");
+        recipeDetailsText.append("Category: ").append(selectedRecipe.getCategory()).append("\n");
+        recipeDetailsText.append("Difficulty: ").append(selectedRecipe.getDifficulty()).append("\n");
+        recipeDetailsText.append("Duration: ").append(selectedRecipe.getDuration()).append(" minutes\n\n");
+
+        recipeDetailsText.append("Ingredients:\n");
+        for (Ingredient ingredient : selectedRecipe.getIngredients()) {
+            recipeDetailsText.append("- ").append(ingredient).append("\n");
+        }
+
+        recipeDetailsText.append("\nInstructions:\n").append(selectedRecipe.getDescription());
+
+        recipeDetailsArea.setText(recipeDetailsText.toString());
+    }
+}
+
+}
